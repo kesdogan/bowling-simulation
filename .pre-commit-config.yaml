@@ -1,0 +1,14 @@
+repos:
+- repo: local
+  hooks:
+    - id: code-format-code
+      name: Run formatter for code.
+      language: system
+      entry: bash -c 'make format'
+      pass_filenames: false
+
+    - id: code-lint-code
+      name: Run linter for code.
+      language: system
+      entry: bash -c 'make lint'
+      pass_filenames: false
