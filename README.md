@@ -9,3 +9,8 @@ python3.10 -m venv env
 source env/bin/activate
 make init
 ```
+
+## 📚 Sources
+
+- [Original Paper](https://users.cs.utah.edu/~ladislav/bouaziz14projective/bouaziz14projective.pdf)
+- [Implementation](https://github.com/taichi-dev/meshtaichi/tree/main/projective_dynamics)
