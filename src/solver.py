@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.utils import Triangle, Vertex
+from src.utils import Constraint, Vertex
 
 
 class ProjectiveDynamicsSolver:
@@ -30,16 +30,19 @@ class ProjectiveDynamicsSolver:
     """
 
     def _calculate_global_system_matrix(self) -> np.ndarray:
+        """Calculates the system matrix of global optimization problem.
+        This matrix is constant throughout the simulation."""
         system_matrix = self.M / self.h**2
 
-        # TODO: Implement the LHS of the global system matrix equation.
+        for c in self.constraints:
+            system_matrix += c.w * c.S.T @ c.A.T @ c.A @ c.S
 
         return system_matrix
 
     def __init__(
         self,
         initial_vertices: list[Vertex],
-        triangles: list[Triangle],
+        constraints: list[Constraint],
         step_size: float,
     ):
         """Initializes the solver."""
@@ -51,7 +54,7 @@ class ProjectiveDynamicsSolver:
         self.M = np.diag([v.mass for v in initial_vertices])
         self.M_inv = 1 / self.M
 
-        self.triangles = triangles
+        self.constraints = constraints
         self.h = step_size
 
         self.global_system_matrix = self._calculate_global_system_matrix()
@@ -62,9 +65,18 @@ class ProjectiveDynamicsSolver:
         q_new = np.copy(s)
 
         for _ in range(num_iterations_per_step):
-            # TODO: Implement the RHS of the global system matrix equation.
             b = self.M @ s / self.h**2
 
+            p = []
+            for c in self.constraints:
+                # TODO: perform minimization of the energy function
+                # to calculate the p_c vectors
+                ...
+
+            for c, p_c in zip(self.constraints, p):
+                b += c.w * c.S.T @ c.A.T @ c.B @ p_c
+
+            # solve (global_system_matrix * q_new = b)
             q_new = np.linalg.solve(self.global_system_matrix, b)
 
         v_new = (q_new - self.q) / self.h

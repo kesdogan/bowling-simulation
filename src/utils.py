@@ -20,3 +20,13 @@ class Triangle:
     v0: int
     v1: int
     v2: int
+
+
+@dataclass
+class Constraint:
+    """This class represents a generic constraint by the A, S and B matrix."""
+
+    w: float
+    A: np.ndarray
+    S: np.ndarray
+    B: np.ndarray
