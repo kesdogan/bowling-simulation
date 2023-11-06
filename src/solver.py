@@ -1,25 +1,6 @@
-from dataclasses import dataclass
-
 import numpy as np
 
-
-@dataclass
-class Vertex:
-    """This class represents a vertex in the mesh."""
-
-    position: np.ndarray
-    velocity: np.ndarray
-    mass: float
-    external_force: np.ndarray
-
-
-@dataclass
-class Triangle:
-    """This class represents a triangle in the mesh."""
-
-    v0: Vertex
-    v1: Vertex
-    v2: Vertex
+from src.utils import Triangle, Vertex
 
 
 class ProjectiveDynamicsSolver:
@@ -27,7 +8,11 @@ class ProjectiveDynamicsSolver:
     paper "Projective Dynamics: Fusing Constraint Projections for Fast
     Simulation".
 
-    This class has the following attributes:
+    This implementation of the solver is designed to work with triangular meshes.
+
+    This class has the following main attributes:
+
+    - n: The number of vertices in the mesh.
 
     - q: A numpy array of shape (n, 3) containing the positions of the vertices
       in the mesh.
@@ -40,40 +25,49 @@ class ProjectiveDynamicsSolver:
 
     - M: A diagonal numpy array of shape (n, n) containing the masses of the
       vertices in the mesh.
+
+    - h: The step size of the solver.
     """
 
+    def _calculate_global_system_matrix(self) -> np.ndarray:
+        system_matrix = self.M / self.h**2
+
+        # TODO: Implement the LHS of the global system matrix equation.
+
+        return system_matrix
+
     def __init__(
-        self, initial_triangles: list[Triangle], num_iterations: int, constraints: list
+        self,
+        initial_vertices: list[Vertex],
+        triangles: list[Triangle],
+        step_size: float,
     ):
-        all_vertices = [v for t in initial_triangles for v in (t.v0, t.v1, t.v2)]
+        """Initializes the solver."""
+        self.n = len(initial_vertices)
+        self.q = np.array(v.position for v in initial_vertices)
+        self.v = np.array(v.velocity for v in initial_vertices)
+        self.f_ext = np.array(v.external_force for v in initial_vertices)
 
-        self.n = len(all_vertices)
-        self.q = np.array([v.position for v in all_vertices])
-        self.v = np.array([v.velocity for v in all_vertices])
-        self.f_ext = np.array([v.external_force for v in all_vertices])
-
-        self.M = np.diag([v.mass for v in all_vertices])
+        self.M = np.diag([v.mass for v in initial_vertices])
         self.M_inv = 1 / self.M
 
-        self.num_iterations = num_iterations
-        self.constraints = constraints
+        self.triangles = triangles
+        self.h = step_size
 
-    def perform_step(self, h: float):
-        """Performs a single step of the projective dynamics solver.
+        self.global_system_matrix = self._calculate_global_system_matrix()
 
-        Args:
-            h: The time step to use.
-        """
-        s = self.q + h * self.v + h**2 * self.M_inv @ self.f_ext
-        q_new = s
+    def perform_step(self, num_iterations_per_step: int):
+        """Performs a single step of the projective dynamics solver."""
+        s = self.q + self.h * self.v + self.h**2 * self.M_inv @ self.f_ext
+        q_new = np.copy(s)
 
-        for _ in range(self.num_iterations):
-            for constraint in self.constraints:
-                ...
+        for _ in range(num_iterations_per_step):
+            # TODO: Implement the RHS of the global system matrix equation.
+            b = self.M @ s / self.h**2
 
-            ...
+            q_new = np.linalg.solve(self.global_system_matrix, b)
 
-        v_new = (q_new - self.q) / h
+        v_new = (q_new - self.q) / self.h
 
         self.q = q_new
         self.v = v_new
