@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,18 +23,13 @@ class Triangle:
     v2: int
 
 
-@dataclass
-class Constraint:
-    """This class represents a generic constraint by the A, S and B matrix."""
+class PDConstraint(ABC):
+    """This abstract class represents a constraint for projective dynamics."""
 
+    @abstractmethod
     def get_global_system_matrix_contribution(self) -> np.ndarray:
-        return self.w * self.S.T @ self.A.T @ self.A @ self.S
+        raise NotImplementedError
 
-    def get_global_rhs_contribution(self) -> np.ndarray:
-        p = np.array([])
-        return self.w * self.S.T @ self.A.T @ self.B @ p
-
-    w: float
-    A: np.ndarray
-    S: np.ndarray
-    B: np.ndarray
+    @abstractmethod
+    def get_global_system_rhs_contribution(self) -> np.ndarray:
+        raise NotImplementedError
