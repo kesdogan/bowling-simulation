@@ -35,7 +35,7 @@ class ProjectiveDynamicsSolver:
         system_matrix = self.M / self.h**2
 
         for c in self.constraints:
-            system_matrix += c.w * c.S.T @ c.A.T @ c.A @ c.S
+            system_matrix += c.get_global_system_matrix_contribution()
 
         return system_matrix
 
@@ -65,19 +65,12 @@ class ProjectiveDynamicsSolver:
         q_new = np.copy(s)
 
         for _ in range(num_iterations_per_step):
-            b = self.M @ s / self.h**2
+            rhs = self.M @ s / self.h**2
 
-            p = []
             for c in self.constraints:
-                # TODO: perform minimization of the energy function
-                # to calculate the p_c vectors
-                ...
+                rhs += c.get_global_rhs_contribution()
 
-            for c, p_c in zip(self.constraints, p):
-                b += c.w * c.S.T @ c.A.T @ c.B @ p_c
-
-            # solve (global_system_matrix * q_new = b)
-            q_new = np.linalg.solve(self.global_system_matrix, b)
+            q_new = np.linalg.solve(self.global_system_matrix, rhs)
 
         v_new = (q_new - self.q) / self.h
 
