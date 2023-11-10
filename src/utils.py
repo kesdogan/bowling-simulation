@@ -31,5 +31,7 @@ class PDConstraint(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_global_system_rhs_contribution(self) -> np.ndarray:
+    def get_global_system_rhs_contribution(
+        self, current_positions: np.ndarray
+    ) -> np.ndarray:
         raise NotImplementedError

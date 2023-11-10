@@ -1,26 +1,6 @@
-from dataclasses import dataclass
-
 import numpy as np
 
 from src.utils import PDConstraint, Vertex
-
-
-@dataclass
-class GeneralPDConstraint(PDConstraint):
-    """This class represents a general constraint for projective dynamics."""
-
-    w: float
-    A: np.ndarray
-    S: np.ndarray
-    B: np.ndarray
-
-    def get_global_system_matrix_contribution(self) -> np.ndarray:
-        return self.w * self.S.T @ self.A.T @ self.A @ self.S
-
-    def get_global_system_rhs_contribution(self) -> np.ndarray:
-        p = np.array([])
-        # TODO
-        return self.w * self.S.T @ self.A.T @ self.B @ p
 
 
 class ProjectiveDynamicsSolver:
@@ -88,7 +68,7 @@ class ProjectiveDynamicsSolver:
             rhs = self.M @ s / self.h**2
 
             for c in self.constraints:
-                rhs += c.get_global_system_rhs_contribution()
+                rhs += c.get_global_system_rhs_contribution(self.q)
 
             q_new = np.linalg.solve(self.global_system_matrix, rhs)
 
