@@ -2,13 +2,19 @@ repos:
 - repo: local
   hooks:
     - id: code-format-code
-      name: Run formatter for code.
+      name: Run formatter.
       language: system
       entry: bash -c 'make format'
       pass_filenames: false
 
     - id: code-lint-code
-      name: Run linter for code.
+      name: Run linter.
       language: system
       entry: bash -c 'make lint'
+      pass_filenames: false
+
+    - id: code-test-code
+      name: Run tests.
+      language: system
+      entry: bash -c 'make test'
       pass_filenames: false

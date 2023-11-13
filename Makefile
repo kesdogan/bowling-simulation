@@ -9,5 +9,8 @@ format:
 lint:
 	flake8 src
 
+test:
+	python -m pytest
+
 run:
 	python src/run.py
