@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from utils import Triangle
+from src.utils import Triangle
 
 
 @dataclass

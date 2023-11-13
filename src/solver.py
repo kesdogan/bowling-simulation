@@ -44,7 +44,7 @@ class ProjectiveDynamicsSolver:
         self,
         initial_vertices: list[Vertex],
         constraints: list[PDConstraint],
-        step_size: float,
+        step_size: float = 0.1,
     ):
         """Initializes the solver."""
         self.n = len(initial_vertices)
