@@ -1,7 +1,7 @@
 from src.utils import Triangle, Vertex
 from src.constraints import Simplicial2DConstraint, PDConstraint
 from src.solver import ProjectiveDynamicsSolver
-
+from scipy.spatial.transform import Rotation
 import numpy as np
 
 
@@ -31,11 +31,13 @@ def test_rotation_invariance():
 
     triangles = [Triangle(0, 1, 2)]
 
+    rotation = Rotation.from_euler("xy", [30, 50], degrees=True)
+
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
             triangle=triangles[0],
-            intial_positions=np.array(
-                np.rot90([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
+            initial_positions=rotation.apply(
+                np.array([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
             ),
             sigma_min=-1.0,
             sigma_max=1.0,

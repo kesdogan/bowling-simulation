@@ -1,2 +1,7 @@
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/shared.egg-info/
+
 env
 .DS_Store

@@ -34,7 +34,7 @@ def test_no_forces():
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
             triangle=triangles[0],
-            intial_positions=np.array(
+            initial_positions=np.array(
                 [[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]]
             ),
             sigma_min=-1.0,
@@ -81,7 +81,7 @@ def test_constant_unidirectional_force():
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
             triangle=triangles[0],
-            intial_positions=np.array(
+            initial_positions=np.array(
                 [[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]]
             ),
             sigma_min=-1.0,
