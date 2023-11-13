@@ -19,5 +19,6 @@ pip freeze > requirements.txt
 ## 📚 Sources
 
 - [Original Paper](https://users.cs.utah.edu/~ladislav/bouaziz14projective/bouaziz14projective.pdf)
+- [Thesis with better explanation](https://purehost.bath.ac.uk/ws/portalfiles/portal/187951440/clewin_thesis.pdf)
 - [Implementation](https://github.com/taichi-dev/meshtaichi/tree/main/projective_dynamics)
 - [Another Implementation](https://github.com/fangqiaohu/ProjectiveDynamics/blob/master/muti_thre.py)
