@@ -1,6 +1,6 @@
 from src.utils import Triangle, Vertex
-from src.constraints import Simplicial2DConstraint, PDConstraint
-from src.solver import ProjectiveDynamicsSolver
+from src.constraints import Simplicial2DConstraint
+from src.solver import ProjectiveDynamicsSolver, PDConstraint
 
 import numpy as np
 
