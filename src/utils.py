@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import numpy as np
@@ -21,17 +20,3 @@ class Triangle:
     v0: int
     v1: int
     v2: int
-
-
-class PDConstraint(ABC):
-    """This abstract class represents a constraint for projective dynamics."""
-
-    @abstractmethod
-    def get_global_system_matrix_contribution(self) -> np.ndarray:
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_global_system_rhs_contribution(
-        self, current_positions: np.ndarray
-    ) -> np.ndarray:
-        raise NotImplementedError

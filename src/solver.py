@@ -1,6 +1,7 @@
 import numpy as np
 
-from src.utils import PDConstraint, Vertex
+from src.constraints import PDConstraint
+from src.utils import Vertex
 
 
 class ProjectiveDynamicsSolver:
@@ -47,12 +48,12 @@ class ProjectiveDynamicsSolver:
     ):
         """Initializes the solver."""
         self.n = len(initial_vertices)
-        self.q = np.array(v.position for v in initial_vertices)
-        self.v = np.array(v.velocity for v in initial_vertices)
-        self.f_ext = np.array(v.external_force for v in initial_vertices)
+        self.q = np.array([v.position for v in initial_vertices])
+        self.v = np.array([v.velocity for v in initial_vertices])
+        self.f_ext = np.array([v.external_force for v in initial_vertices])
 
         self.M = np.diag([v.mass for v in initial_vertices])
-        self.M_inv = 1 / self.M
+        self.M_inv = np.linalg.inv(self.M)
 
         self.constraints = constraints
         self.h = step_size
