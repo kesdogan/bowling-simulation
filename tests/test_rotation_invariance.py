@@ -5,9 +5,9 @@ from src.solver import ProjectiveDynamicsSolver
 import numpy as np
 
 
-def test_no_forces():
-    """Test if the solver can handle no forces, leading to no
-    change at all."""
+def test_rotation_invariance():
+    """Test if the solver is invariant w.r.t rotation of the
+    mesh."""
     vertices = [
         Vertex(
             position=np.array([1.0, 0.0, 0.0]),
@@ -35,7 +35,7 @@ def test_no_forces():
         Simplicial2DConstraint(
             triangle=triangles[0],
             intial_positions=np.array(
-                [[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]]
+                np.rot90([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
             ),
             sigma_min=-1.0,
             sigma_max=1.0,
@@ -49,3 +49,4 @@ def test_no_forces():
         solver.perform_step(100)
 
     assert np.allclose(solver.q, np.array([v.position for v in vertices]))
+    assert np.allclose(solver.v, np.array([v.velocity for v in vertices]))
