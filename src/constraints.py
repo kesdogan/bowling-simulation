@@ -22,6 +22,8 @@ class Simplicial2DConstraint(PDConstraint):
 
     A: np.ndarray = field(init=False)
     S: np.ndarray = field(init=False)
+    X_g: np.ndarray = field(init=False)
+    X_g_inv: np.ndarray = field(init=False)
 
     def __post_init__(self):
         n = len(self.initial_positions)
@@ -38,16 +40,18 @@ class Simplicial2DConstraint(PDConstraint):
         self.S[1, self.triangle.v1] = 1
         self.S[2, self.triangle.v2] = 1
 
+        self.X_g = (self.A @ self.S @ self.initial_positions).T
+        self.X_g_inv = np.linalg.pinv(self.X_g)
+
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
-        X_g = (self.A @ self.S @ self.initial_positions).T
         X_f = (self.A @ self.S @ current_positions).T
 
-        U, s, V_t = np.linalg.svd(X_f @ np.linalg.pinv(X_g))
+        U, s, V_t = np.linalg.svd(X_f @ self.X_g_inv)
 
         s = np.clip(s, self.sigma_min, self.sigma_max)
         s = np.diag(s)
 
         T = U @ s @ V_t
 
-        auxiliary_variable = (T @ X_g).T
+        auxiliary_variable = (T @ self.X_g).T
         return auxiliary_variable
