@@ -13,11 +13,11 @@ def test_no_forces():
     masses = np.ones(initial_positions.shape[0])
     external_forces = np.zeros_like(initial_positions)
 
-    triangles = [Triangle(0, 1, 2)]
+    triangles = [np.array([0, 1, 2])]
 
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
-            triangle=triangles[0],
+            triangle_indices=triangles[0],
             initial_positions=np.array(
                 [[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]]
             ),
@@ -46,11 +46,11 @@ def test_constant_unidirectional_force():
     masses = np.ones(initial_positions.shape[0])
     external_forces = np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0, 0]])
 
-    triangles = [Triangle(0, 1, 2)]
+    triangles = [np.array([0, 1, 2])]
 
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
-            triangle=triangles[0],
+            triangle_indices=triangles[0],
             initial_positions=np.array(
                 [[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]]
             ),

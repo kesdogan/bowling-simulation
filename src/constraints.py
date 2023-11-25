@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from src.solver import PDConstraint
-from src.utils import Triangle
 
 
 @dataclass
@@ -14,7 +13,7 @@ class Simplicial2DConstraint(PDConstraint):
     The calculation of the projection T is taken from Appendix A of the paper.
     """
 
-    triangle: Triangle
+    triangle_indices: np.ndarray
     initial_positions: np.ndarray
 
     sigma_min: float = 0.95
@@ -36,9 +35,9 @@ class Simplicial2DConstraint(PDConstraint):
         )
 
         self.S = np.zeros((3, n))
-        self.S[0, self.triangle.v0] = 1
-        self.S[1, self.triangle.v1] = 1
-        self.S[2, self.triangle.v2] = 1
+        self.S[0, self.triangle_indices] = 1
+        self.S[1, self.triangle_indices] = 1
+        self.S[2, self.triangle_indices] = 1
 
         self.X_g = (self.A @ self.S @ self.initial_positions).T
         self.X_g_inv = np.linalg.pinv(self.X_g)
@@ -55,3 +54,24 @@ class Simplicial2DConstraint(PDConstraint):
 
         auxiliary_variable = (T @ self.X_g).T
         return auxiliary_variable
+
+
+@dataclass
+class CollisionConstraint(PDConstraint):
+    """This class represents a constraint enforcing no collisions."""
+
+    num_vertices: int
+    penetrating_vertex_index: int
+    projected_vertex_positions: np.ndarray
+
+    A: np.ndarray = field(init=False)
+    S: np.ndarray = field(init=False)
+
+    def __post_init__(self):
+        self.A = np.identity(self.num_vertices)
+
+        self.S = np.zeros((3, self.num_vertices))
+        self.S[0, self.penetrating_vertex_index] = 1
+
+    def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
+        return self.projected_vertex_positions

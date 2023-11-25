@@ -13,13 +13,13 @@ def test_rotation_invariance():
     masses = np.ones(initial_positions.shape[0])
     external_forces = np.zeros_like(initial_positions)
 
-    triangles = [Triangle(0, 1, 2)]
+    triangles = [np.array([0, 1, 2])]
 
     rotation = Rotation.from_euler("xy", [30, 50], degrees=True)
 
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
-            triangle=triangles[0],
+            triangle_indices=triangles[0],
             initial_positions=rotation.apply(initial_positions),
             sigma_min=-1.0,
             sigma_max=1.0,
@@ -46,13 +46,13 @@ def test_rotation_translation_invariance():
     masses = np.ones(initial_positions.shape[0])
     external_forces = np.zeros_like(initial_positions)
 
-    triangles = [Triangle(0, 1, 2)]
+    triangles = [np.array([0, 1, 2])]
 
     rotation = Rotation.from_euler("xy", [30, 50], degrees=True)
 
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
-            triangle=triangles[0],
+            triangle_indices=triangles[0],
             initial_positions=rotation.apply(
                 initial_positions + np.array([[10, 20, -10]])
             ),

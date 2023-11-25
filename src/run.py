@@ -3,7 +3,7 @@ import numpy as np
 import polyscope as ps
 
 from src.constraints import Simplicial2DConstraint
-from src.solver import ProjectiveDynamicsSolver
+from src.solver import PDConstraint, ProjectiveDynamicsSolver
 
 # load bowling ball from obj file place in field
 v, _, _, f, _, _ = igl.read_obj("../assets/simple_ball.obj")
@@ -44,8 +44,8 @@ initial_velocities[indices_ball_mask] = np.array([1, 0, 0])
 masses = np.ones(len(vertices))
 external_forces = np.zeros(vertices.shape)
 
-constraints = [
-    Simplicial2DConstraint(triangle=face, initial_positions=vertices, weight=1)
+constraints: list[PDConstraint] = [
+    Simplicial2DConstraint(triangle_indices=face, initial_positions=vertices, weight=1)
     for face in faces
 ]
 
