@@ -10,7 +10,7 @@ lint:
 	flake8 src
 
 test:
-	python -m pytest
+	python3 -m pytest
 
 run:
-	python src/run.py
+	python3 src/run.py

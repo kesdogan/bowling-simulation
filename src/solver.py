@@ -11,7 +11,7 @@ class PDConstraint(ABC):
 
     Note that B from the paper is assumed to be the identity matrix."""
 
-    weight: float
+    weight: float = 1.0
     A: np.ndarray
     S: np.ndarray
 
