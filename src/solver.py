@@ -3,8 +3,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from src.utils import Vertex
-
 
 @dataclass
 class PDConstraint(ABC):
