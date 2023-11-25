@@ -68,10 +68,12 @@ class CollisionConstraint(PDConstraint):
     S: np.ndarray = field(init=False)
 
     def __post_init__(self):
-        self.A = np.identity(self.num_vertices)
+        self.A = np.array([[1, 1, 1]])
 
         self.S = np.zeros((3, self.num_vertices))
         self.S[0, self.penetrating_vertex_index] = 1
+        self.S[1, self.penetrating_vertex_index] = 1
+        self.S[2, self.penetrating_vertex_index] = 1
 
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
-        return self.projected_vertex_positions
+        return self.projected_vertex_positions.reshape(1, -1)
