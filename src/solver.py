@@ -64,17 +64,26 @@ class ProjectiveDynamicsSolver:
 
     def __init__(
         self,
-        initial_vertices: list[Vertex],
+        initial_positions: np.ndarray,
+        initial_velocities: np.ndarray,
+        masses: np.ndarray,
+        external_forces: np.ndarray,
         constraints: list[PDConstraint],
         step_size: float = 0.1,
     ):
         """Initializes the solver."""
-        self.n = len(initial_vertices)
-        self.q = np.array([v.position for v in initial_vertices])
-        self.v = np.array([v.velocity for v in initial_vertices])
-        self.f_ext = np.array([v.external_force for v in initial_vertices])
+        self.n = len(initial_positions)
 
-        self.M = np.diag([v.mass for v in initial_vertices])
+        assert initial_positions.shape == (self.n, 3)
+        assert initial_velocities.shape == (self.n, 3)
+        assert masses.shape == (self.n,)
+        assert external_forces.shape == (self.n, 3)
+
+        self.q = initial_positions
+        self.v = initial_velocities
+        self.f_ext = external_forces
+
+        self.M = np.diag(masses)
         self.M_inv = np.linalg.inv(self.M)
 
         self.constraints = constraints

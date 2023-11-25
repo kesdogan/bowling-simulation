@@ -8,26 +8,10 @@ import numpy as np
 def test_rotation_invariance():
     """Test if the solver is invariant w.r.t rotation of the
     mesh."""
-    vertices = [
-        Vertex(
-            position=np.array([1.0, 0.0, 0.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-        Vertex(
-            position=np.array([3.0, 0.0, 0.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-        Vertex(
-            position=np.array([1.0, 3.0, 3.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-    ]
+    initial_positions = np.array([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
+    initial_velocities = np.zeros_like(initial_positions)
+    masses = np.ones(initial_positions.shape[0])
+    external_forces = np.zeros_like(initial_positions)
 
     triangles = [Triangle(0, 1, 2)]
 
@@ -36,47 +20,31 @@ def test_rotation_invariance():
     constraints: list[PDConstraint] = [
         Simplicial2DConstraint(
             triangle=triangles[0],
-            initial_positions=rotation.apply(
-                np.array([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
-            ),
+            initial_positions=rotation.apply(initial_positions),
             sigma_min=-1.0,
             sigma_max=1.0,
             weight=1,
         )
     ]
 
-    solver = ProjectiveDynamicsSolver(vertices, constraints)
+    solver = ProjectiveDynamicsSolver(
+        initial_positions, initial_velocities, masses, external_forces, constraints
+    )
 
     for _ in range(100):
         solver.perform_step(100)
 
-    assert np.allclose(solver.q, np.array([v.position for v in vertices]))
-    assert np.allclose(solver.v, np.array([v.velocity for v in vertices]))
+    assert np.allclose(solver.q, initial_positions)
+    assert np.allclose(solver.v, initial_velocities)
 
 
 def test_rotation_translation_invariance():
     """Test if the solver is invariant w.r.t rotation and translation of the
     mesh."""
-    vertices = [
-        Vertex(
-            position=np.array([1.0, 0.0, 0.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-        Vertex(
-            position=np.array([3.0, 0.0, 0.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-        Vertex(
-            position=np.array([1.0, 3.0, 3.0]),
-            velocity=np.array([0.0, 0.0, 0.0]),
-            mass=1.0,
-            external_force=np.array([0.0, 0.0, 0.0]),
-        ),
-    ]
+    initial_positions = np.array([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
+    initial_velocities = np.zeros_like(initial_positions)
+    masses = np.ones(initial_positions.shape[0])
+    external_forces = np.zeros_like(initial_positions)
 
     triangles = [Triangle(0, 1, 2)]
 
@@ -86,8 +54,7 @@ def test_rotation_translation_invariance():
         Simplicial2DConstraint(
             triangle=triangles[0],
             initial_positions=rotation.apply(
-                np.array([[1.0, 0.0, 0.0], [3.0, 0.0, 0.0], [1.0, 3.0, 3.0]])
-                + np.array([[10, 20, -10]])
+                initial_positions + np.array([[10, 20, -10]])
             ),
             sigma_min=-1.0,
             sigma_max=1.0,
@@ -95,10 +62,12 @@ def test_rotation_translation_invariance():
         )
     ]
 
-    solver = ProjectiveDynamicsSolver(vertices, constraints)
+    solver = ProjectiveDynamicsSolver(
+        initial_positions, initial_velocities, masses, external_forces, constraints
+    )
 
     for _ in range(100):
         solver.perform_step(100)
 
-    assert np.allclose(solver.q, np.array([v.position for v in vertices]))
-    assert np.allclose(solver.v, np.array([v.velocity for v in vertices]))
+    assert np.allclose(solver.q, initial_positions)
+    assert np.allclose(solver.v, initial_velocities)
