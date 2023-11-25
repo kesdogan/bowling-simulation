@@ -45,10 +45,7 @@ masses = np.ones(len(vertices))
 external_forces = np.zeros(vertices.shape)
 
 constraints = [
-    Simplicial2DConstraint(
-        triangle=face,
-        initial_positions=vertices,
-    )
+    Simplicial2DConstraint(triangle=face, initial_positions=vertices, weight=1)
     for face in faces
 ]
 

@@ -11,9 +11,9 @@ class PDConstraint(ABC):
 
     Note that B from the paper is assumed to be the identity matrix."""
 
-    weight: float = 1.0
     A: np.ndarray
     S: np.ndarray
+    weight: float
 
     @abstractmethod
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
