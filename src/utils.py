@@ -39,7 +39,7 @@ class Collision:
     # projection of that point on face
 
     # normal
-    penetrating_vertex: np.array
-    penetrated_face: np.array
-    projection_of_point_on_face: np.array
-    normal: np.array
+    penetrating_vertex: np.ndarray = np.array([])
+    penetrated_face: np.ndarray = np.array([])
+    projection_of_point_on_face: np.ndarray = np.array([[]])
+    normal: np.ndarray = np.array([[]])

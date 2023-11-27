@@ -35,12 +35,14 @@ class Simplicial2DConstraint(PDConstraint):
         )
 
         self.S = np.zeros((3, n))
-        self.S[0, self.triangle_indices] = 1
-        self.S[1, self.triangle_indices] = 1
-        self.S[2, self.triangle_indices] = 1
+        self.S[0, self.triangle_indices[0]] = 1
+        self.S[1, self.triangle_indices[1]] = 1
+        self.S[2, self.triangle_indices[2]] = 1
 
         self.X_g = (self.A @ self.S @ self.initial_positions).T
         self.X_g_inv = np.linalg.pinv(self.X_g)
+
+        self.intersting = 29 in self.triangle_indices
 
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
         X_f = (self.A @ self.S @ current_positions).T
@@ -68,12 +70,10 @@ class CollisionConstraint(PDConstraint):
     S: np.ndarray = field(init=False)
 
     def __post_init__(self):
-        self.A = np.array([[1, 1, 1]])
+        self.A = np.array([[1]])
 
-        self.S = np.zeros((3, self.num_vertices))
+        self.S = np.zeros((1, self.num_vertices))
         self.S[0, self.penetrating_vertex_index] = 1
-        self.S[1, self.penetrating_vertex_index] = 1
-        self.S[2, self.penetrating_vertex_index] = 1
 
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
-        return self.projected_vertex_positions.reshape(1, -1)
+        return np.expand_dims(self.projected_vertex_positions, axis=0)

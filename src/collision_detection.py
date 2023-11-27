@@ -31,6 +31,8 @@ def collision_detecter(object_list, vertices, faces, q):
     for i, object in enumerate(object_list):
         object.v = vertices[object_mask[i][0]]
 
+    collisions = []
+
     for i, object in enumerate(object_list):
         vertices_i = vertices[~object_mask[i][0]]
         faces_i = copy.deepcopy(faces)
@@ -63,10 +65,15 @@ def collision_detecter(object_list, vertices, faces, q):
             I_mask = indices_face >= object_offsets[i][1]
             indices_face[I_mask] = indices_face[I_mask] + object.f.shape[0]
 
-            return Collision(
-                penetrating_vertex=collision_indices + object_offsets[i][0],
-                penetrated_face=indices_face,
-                projection_of_point_on_face=C,
-                normal=N,
+            collisions.append(
+                Collision(
+                    penetrating_vertex=collision_indices + object_offsets[i][0],
+                    penetrated_face=indices_face,
+                    projection_of_point_on_face=C,
+                    normal=N,
+                )
             )
-    return None
+        else:
+            collisions.append(Collision())
+
+    return collisions
