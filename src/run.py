@@ -19,18 +19,19 @@ vertices = (
 ) = (
     initial_velocities
 ) = masses = external_forces = simplicial_constraints = solver = None
-pin_rows = 1
-running = False
+pin_rows = 1; ball_speed = 10.0
+running = False; fancy_pins = False
 
 
 # set up scene for a variable number of pin rows
 def set_up_scene():
-    global vertices, faces, object_list, initial_velocities, masses, external_forces, simplicial_constraints, solver
+    global vertices, faces, object_list, initial_velocities, masses, external_forces, simplicial_constraints, solver, ball_speed, pin_rows, fancy_pins
 
     # load bowling ball from obj file place in field
     v, _, _, f, _, _ = igl.read_obj("./assets/simple_ball.obj")
+    ball_min = v[:, 1].min()
     v = v + np.array([-3, 0, 0])
-    object_list.append(Object(v, f))
+    object_list = [Object(v, f)]
     indices_ball = len(v)
 
     # create global faces and vertices np.arrays
@@ -38,8 +39,10 @@ def set_up_scene():
     faces = np.array(f)
 
     # add pins to the same mesh in this array
-    v, _, _, f, _, _ = igl.read_obj("./assets/simple_pin.obj")
-    for i in range(1):
+    if fancy_pins: v, _, _, f, _, _ = igl.read_obj("./assets/fancy_pin.obj")
+    else: v, _, _, f, _, _ = igl.read_obj("./assets/simple_pin.obj")
+    v[:, 1] = v[:, 1] - v[:, 1].min() + ball_min
+    for i in range(pin_rows):
         for j in range(-i, i + 1):
             faces = np.concatenate((faces, f + len(vertices)), axis=0)
             vertices = np.concatenate(
@@ -53,10 +56,11 @@ def set_up_scene():
     # intial all objects as static, except for ball, which is given initial velocity
     # slowly approaching pins
     initial_velocities = np.zeros(vertices.shape)
-    initial_velocities[:indices_ball] = np.array([1, 0, 0])
+    initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
 
     masses = np.ones(len(vertices))
-    masses[:indices_ball] *= 0.01
+    masses *= 0.00001
+    masses[:indices_ball] *= 0.1
     external_forces = np.zeros(vertices.shape)
 
     simplicial_constraints = [
@@ -83,13 +87,15 @@ mesh = ps.register_surface_mesh("everything", vertices, faces)
 
 
 def callback():
-    global running, pin_rows, mesh, vertices, object_list, solver
+    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins
 
     psim.PushItemWidth(100)
     psim.TextUnformatted("Here we do the initial set up of the scene")
-    changed, pin_rows = psim.InputInt("pin_rows", pin_rows, step=1, step_fast=1)
+    changed1, pin_rows = psim.InputInt("pin_rows", pin_rows, step=1, step_fast=1)
+    changed2, ball_speed = psim.InputFloat("ball_speed", ball_speed, step=0.1, step_fast=1)
+    changed3, fancy_pins = psim.Checkbox("fancy_pins", fancy_pins)
 
-    if changed:
+    if changed1 or changed2 or changed3:
         print("scene settings changed")
         print(pin_rows)
         set_up_scene()
