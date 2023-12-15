@@ -42,8 +42,6 @@ class Simplicial2DConstraint(PDConstraint):
         self.X_g = (self.A @ self.S @ self.initial_positions).T
         self.X_g_inv = np.linalg.pinv(self.X_g)
 
-        self.intersting = 29 in self.triangle_indices
-
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
         X_f = (self.A @ self.S @ current_positions).T
 
@@ -53,6 +51,78 @@ class Simplicial2DConstraint(PDConstraint):
         s = np.diag(s)
 
         T = U @ s @ V_t
+
+        auxiliary_variable = (T @ self.X_g).T
+        return auxiliary_variable
+
+
+@dataclass
+class VolumeConstraint(PDConstraint):
+    """This class represents a volume constraint as described in the
+    paper.
+
+    The calculation of the projection T is taken from Appendix A of
+    the paper.
+    """
+
+    tetrahedron_indices: np.ndarray
+    initial_positions: np.ndarray
+
+    sigma_min: float = 0.95
+    sigma_max: float = 1.05
+
+    A: np.ndarray = field(init=False)
+    S: np.ndarray = field(init=False)
+    X_g: np.ndarray = field(init=False)
+    X_g_inv: np.ndarray = field(init=False)
+
+    eps = 0.000001
+
+    def __post_init__(self):
+        n = len(self.initial_positions)
+
+        self.A = np.array(
+            [
+                [1, 0, 0, -1],
+                [0, 1, 0, -1],
+                [0, 0, 1, -1],
+            ]
+        )
+
+        self.S = np.zeros((4, n))
+        self.S[0, self.tetrahedron_indices[0]] = 1
+        self.S[1, self.tetrahedron_indices[1]] = 1
+        self.S[2, self.tetrahedron_indices[2]] = 1
+        self.S[3, self.tetrahedron_indices[3]] = 1
+
+        self.X_g = (self.A @ self.S @ self.initial_positions).T
+        self.X_g_inv = np.linalg.pinv(self.X_g)
+
+    def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
+        X_f = (self.A @ self.S @ current_positions).T
+
+        # perform SVD
+
+        U, sigma, V_t = np.linalg.svd(X_f @ self.X_g_inv)
+        sigma = np.diag(sigma)
+        sigma_p = sigma
+
+        # perform iterative minimization
+
+        D_k = np.random.random(3)
+
+        for _ in range(10):
+            sigma_p = sigma + np.diag(D_k)
+            det_sigma_p = np.linalg.det(sigma_p)
+
+            DC_D = np.repeat(det_sigma_p, 3) / np.maximum(
+                np.diagonal(sigma_p), self.eps
+            )
+            C_D = max(det_sigma_p - self.sigma_max, det_sigma_p - self.sigma_min)
+
+            D_k = (DC_D.T @ D_k - C_D) / np.maximum(np.dot(DC_D, DC_D), self.eps) * DC_D
+
+        T = U @ sigma_p @ V_t
 
         auxiliary_variable = (T @ self.X_g).T
         return auxiliary_variable
