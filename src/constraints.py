@@ -107,6 +107,14 @@ class VolumeConstraint(PDConstraint):
         sigma = np.diag(sigma)
         sigma_p = sigma
 
+        # check if we even have to correct
+
+        det_sigma_p = np.linalg.det(sigma_p)
+        if self.sigma_min <= det_sigma_p <= self.sigma_max:
+            T = U @ sigma_p @ V_t
+            auxiliary_variable = (T @ self.X_g).T
+            return auxiliary_variable
+
         # perform iterative minimization
 
         D_k = np.random.random(3)
@@ -120,7 +128,9 @@ class VolumeConstraint(PDConstraint):
             )
             C_D = max(det_sigma_p - self.sigma_max, det_sigma_p - self.sigma_min)
 
-            D_k = (DC_D.T @ D_k - C_D) / np.maximum(np.dot(DC_D, DC_D), self.eps) * DC_D
+            D_k = (DC_D.T @ D_k - C_D) / max(np.dot(DC_D, DC_D), self.eps) * DC_D
+
+        # calculate projection T
 
         T = U @ sigma_p @ V_t
 
