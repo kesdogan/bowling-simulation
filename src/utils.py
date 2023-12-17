@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
-import numpy as np
+import torch
 
 
 @dataclass
 class Vertex:
     """This class represents a vertex in the mesh."""
 
-    position: np.ndarray
-    velocity: np.ndarray
+    position: torch.Tensor
+    velocity: torch.Tensor
     mass: float
-    external_force: np.ndarray
+    external_force: torch.Tensor
 
 
 @dataclass
@@ -24,8 +24,8 @@ class Triangle:
 
 @dataclass
 class Object:
-    v: np.ndarray
-    f: np.ndarray
+    v: torch.Tensor
+    f: torch.Tensor
 
 
 @dataclass
@@ -39,7 +39,6 @@ class Collision:
     # projection of that point on face
 
     # normal
-    penetrating_vertex: np.ndarray = np.array([])
-    penetrated_face: np.ndarray = np.array([])
-    projection_of_point_on_face: np.ndarray = np.array([[]])
-    normal: np.ndarray = np.array([[]])
+    penetrating_vertex: torch.Tensor = torch.tensor([])
+    penetrated_face: torch.Tensor = torch.tensor([])
+    projection_of_point_on_face: torch.Tensor = torch.tensor([[]])

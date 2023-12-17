@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-import numpy as np
+import torch
 
 
 @dataclass
@@ -11,24 +11,26 @@ class PDConstraint(ABC):
 
     Note that B from the paper is assumed to be the identity matrix."""
 
-    A: np.ndarray
-    S: np.ndarray
+    A: torch.Tensor
+    S: torch.Tensor
     weight: float
+    gpu: bool
 
     @abstractmethod
-    def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
+    def _get_auxiliary_variable(self, current_positions: torch.Tensor) -> torch.Tensor:
         """Computes the auxiliary variable p for the constraint for the given
         current positions. This corresponds to the local step."""
         raise NotImplementedError
 
-    def get_global_system_matrix_contribution(self) -> np.ndarray:
+    def get_global_system_matrix_contribution(self) -> torch.Tensor:
         """Returns the contribution of the constraint to the global system matrix (the
         LHS)."""
+
         return self.weight * self.S.T @ self.A.T @ self.A @ self.S
 
     def get_global_system_rhs_contribution(
-        self, current_positions: np.ndarray
-    ) -> np.ndarray:
+        self, current_positions: torch.Tensor
+    ) -> torch.Tensor:
         """Returns the contribution of the RHS constribution of the global system."""
         p = self._get_auxiliary_variable(current_positions)
         return self.weight * self.S.T @ self.A.T @ p
@@ -62,27 +64,29 @@ class ProjectiveDynamicsSolver:
 
     def __init__(
         self,
-        initial_positions: np.ndarray,
-        initial_velocities: np.ndarray,
-        masses: np.ndarray,
-        external_forces: np.ndarray,
+        initial_positions: torch.Tensor,
+        initial_velocities: torch.Tensor,
+        masses: torch.Tensor,
+        external_forces: torch.Tensor,
         constraints: list[PDConstraint],
         step_size: float = 0.1,
+        gpu=False,
     ):
         """Initializes the solver."""
+        self.device = torch.device("cuda" if gpu else "cpu")
         self.n = len(initial_positions)
 
-        assert initial_positions.shape == (self.n, 3)
-        assert initial_velocities.shape == (self.n, 3)
-        assert masses.shape == (self.n,)
-        assert external_forces.shape == (self.n, 3)
+        assert tuple(initial_positions.shape) == (self.n, 3)
+        assert tuple(initial_velocities.shape) == (self.n, 3)
+        assert tuple(masses.shape) == (self.n,)
+        assert tuple(external_forces.shape) == (self.n, 3)
 
-        self.q = initial_positions
-        self.v = initial_velocities
-        self.f_ext = external_forces
+        self.q = initial_positions.float().to(self.device)
+        self.v = initial_velocities.float().to(self.device)
+        self.f_ext = external_forces.float().to(self.device)
 
-        self.M = np.diag(masses)
-        self.M_inv = np.linalg.inv(self.M)
+        self.M = torch.diag(masses).float().to(self.device)
+        self.M_inv = torch.linalg.inv(self.M).float()
 
         self.constraints = constraints
         self.h = step_size
@@ -94,18 +98,23 @@ class ProjectiveDynamicsSolver:
     def perform_step(self, num_iterations_per_step: int):
         """Performs a single step of the projective dynamics solver."""
         s = self.q + self.h * self.v + self.h**2 * self.M_inv @ self.f_ext
-        q_new = self.q
+        s = s.float()
+        q_new = self.q.float()
 
         for _ in range(num_iterations_per_step):
-            rhs = self.M @ s / self.h**2 + sum(
-                c.get_global_system_rhs_contribution(self.q) for c in self.constraints
-            )
-            q_new = np.linalg.solve(self.global_system_matrix, rhs)
+            rhs = self.M @ s / self.h**2 + torch.stack(
+                [
+                    c.get_global_system_rhs_contribution(self.q)
+                    for c in self.constraints
+                ],
+                dim=0,
+            ).sum(dim=0)
+            q_new = torch.linalg.solve(self.global_system_matrix, rhs)
 
         v_new = (q_new - self.q) / self.h
 
-        self.q = q_new
-        self.v = v_new
+        self.q = q_new.float()
+        self.v = v_new.float()
 
     def update_constraints(self, constraints: list[PDConstraint]):
         """Updates the constraints of the solver."""
