@@ -2,22 +2,21 @@ import pickle
 
 from src.solver import ProjectiveDynamicsSolver
 from pathlib import Path
+from datetime import datetime
 
 
 class Cache:
     def __init__(self, faces, vertices):
-        self.cache = []
+        self.positions = []
         self.faces = faces
-        self.vertices = vertices
-
-        num_existing_cached_files = len(list(Path().glob("cache*.pkl")))
-        self.file_name = f"cache_{num_existing_cached_files}.pkl"
+        self.initial_vertices = vertices
+        self.file_name = f"cache_{datetime.now()}.pkl"
 
     def add(self, positions):
-        self.cache.append(positions)
+        self.positions.append(positions)
 
     def get(self, index):
-        return self.cache[min(index, len(self.cache) - 1)]
+        return self.positions[min(index, len(self.positions) - 1)]
 
     def store(self):
         with open(self.file_name, "wb") as f:
@@ -30,8 +29,3 @@ class Cache:
         )
         with open(last_cached_file, "rb") as f:
             return pickle.load(f)
-
-
-def play_from_cache():
-    cache = Cache()
-    cache.load()

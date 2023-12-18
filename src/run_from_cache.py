@@ -1,13 +1,7 @@
-import igl
-import numpy as np
 import polyscope as ps
 import polyscope.imgui as psim
 
-from collision_detection import collision_detecter
-from constraints import CollisionConstraint, Simplicial2DConstraint, VolumeConstraint
-from solver import ProjectiveDynamicsSolver
 from src.caching import Cache
-from utils import Object
 
 epoch = 0
 running = False
