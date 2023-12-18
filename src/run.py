@@ -4,7 +4,12 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from solver import ProjectiveDynamicsSolver, CollisionConstraint, PDConstraint, Simplicial2DConstraint
+from solver import (
+    ProjectiveDynamicsSolver,
+    CollisionConstraint,
+    PDConstraint,
+    Simplicial2DConstraint,
+)
 from utils import Object
 
 # global veriables
@@ -17,8 +22,10 @@ vertices = (
 ) = (
     initial_velocities
 ) = masses = external_forces = simplicial_constraints = solver = None
-pin_rows = 1; ball_speed = 10.0
-running = False; fancy_pins = False
+pin_rows = 1
+ball_speed = 10.0
+running = False
+fancy_pins = False
 
 
 # set up scene for a variable number of pin rows
@@ -37,8 +44,10 @@ def set_up_scene():
     faces = np.array(f)
 
     # add pins to the same mesh in this array
-    if fancy_pins: v, _, _, f, _, _ = igl.read_obj("./assets/fancy_pin.obj")
-    else: v, _, _, f, _, _ = igl.read_obj("./assets/simple_pin.obj")
+    if fancy_pins:
+        v, _, _, f, _, _ = igl.read_obj("./assets/fancy_pin.obj")
+    else:
+        v, _, _, f, _, _ = igl.read_obj("./assets/simple_pin.obj")
     v[:, 1] = v[:, 1] - v[:, 1].min() + ball_min
     for i in range(pin_rows):
         for j in range(-i, i + 1):
@@ -68,8 +77,6 @@ def set_up_scene():
         for face in faces
     ]
 
-    
-
     solver = ProjectiveDynamicsSolver(
         vertices,
         initial_velocities,
@@ -94,7 +101,9 @@ def callback():
     psim.PushItemWidth(100)
     psim.TextUnformatted("Here we do the initial set up of the scene")
     changed1, pin_rows = psim.InputInt("pin_rows", pin_rows, step=1, step_fast=1)
-    changed2, ball_speed = psim.InputFloat("ball_speed", ball_speed, step=0.1, step_fast=1)
+    changed2, ball_speed = psim.InputFloat(
+        "ball_speed", ball_speed, step=0.1, step_fast=1
+    )
     changed3, fancy_pins = psim.Checkbox("fancy_pins", fancy_pins)
 
     if changed1 or changed2 or changed3:
@@ -128,8 +137,9 @@ def callback():
                         projected_vertex_positions=projection_of_point_on_face,
                     )
                 )
-
-        solver.update_constraints(simplicial_constraints + collision_constraints)
+        if collision_constraints:
+            solver.update_constraints(simplicial_constraints + collision_constraints)
+            solver.inverse_2d_constraints()
 
         solver.perform_step(10)
         mesh.update_vertex_positions(solver.q)

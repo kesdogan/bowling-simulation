@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+
 @dataclass
 class PDConstraint(ABC):
     """This abstract class represents a general constraint for projective dynamics.
@@ -31,7 +32,6 @@ class PDConstraint(ABC):
         """Returns the contribution of the RHS constribution of the global system."""
         p = self._get_auxiliary_variable(current_positions)
         return self.weight * self.S.T @ self.A.T @ p
-
 
 
 @dataclass
@@ -73,9 +73,8 @@ class Simplicial2DConstraint(PDConstraint):
 
     def get_x_g_inv(self):
         return self.X_g_inv
-    
+
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
-        
         X_f = (self.A @ self.S @ current_positions).T
 
         U, s, V_t = np.linalg.svd(X_f @ self.X_g_inv)
@@ -87,7 +86,7 @@ class Simplicial2DConstraint(PDConstraint):
 
         auxiliary_variable = (T @ self.X_g).T
         return auxiliary_variable
-    
+
     def get_global_system_rhs_contribution(
         self, current_positions: np.ndarray
     ) -> np.ndarray:
@@ -114,7 +113,6 @@ class CollisionConstraint(PDConstraint):
 
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
         return np.expand_dims(self.projected_vertex_positions, axis=0)
-
 
 
 class ProjectiveDynamicsSolver:
@@ -173,6 +171,7 @@ class ProjectiveDynamicsSolver:
 
         self.constraints = constraints
         self.constra_inv = None
+        self.constra = None
         self.h = step_size
 
         self.A = np.array(
@@ -188,7 +187,10 @@ class ProjectiveDynamicsSolver:
 
     def inverse_2d_constraints(self):
         constra = np.array(self.constraints)
-        self.constra_inv = np.array([c.get_x_g_inv() for c in constra[:len(self.faces)]])
+        self.constra = np.array([c.X_g for c in constra[: len(self.faces)]])
+        self.constra_inv = np.array(
+            [c.get_x_g_inv() for c in constra[: len(self.faces)]]
+        )
 
     def perform_step(self, num_iterations_per_step: int):
         """Performs a single step of the projective dynamics solver."""
@@ -199,8 +201,9 @@ class ProjectiveDynamicsSolver:
             rhs = self.M @ s / self.h**2
 
             rhs_contributions = []
-            print(self.q[self.faces].shape)
-            intermediate = np.matmul(self.A, self.q[self.faces], axes=[(-2, -1), (-2, -1), (-2, -1)])
+            intermediate = np.matmul(
+                self.A, self.q[self.faces], axes=[(-2, -1), (-2, -1), (-2, -1)]
+            )
             intermediate = np.transpose(intermediate, axes=[0, 2, 1])
             advanced = np.matmul(intermediate, self.constra_inv)
             U, ss, V = np.linalg.svd(advanced)
@@ -210,17 +213,17 @@ class ProjectiveDynamicsSolver:
             sss[:, 1, 1] = ss[:, 1]
             sss[:, 2, 2] = ss[:, 2]
             T = np.matmul(np.matmul(U, sss), V)
-            rr = np.matmul(T, intermediate)
+            rr = np.matmul(T, self.constra)
+
             rr = np.transpose(rr, axes=[0, 2, 1])
 
-            for i, c in enumerate(self.constraints[:len(self.faces)]):
-                
+            for i, c in enumerate(self.constraints[: len(self.faces)]):
                 rhs_contributions.append(c.get_global_system_rhs_contribution(rr[i]))
 
-            for c in self.constraints[len(self.faces):]:
+            for c in self.constraints[len(self.faces) :]:
                 tba = c.get_global_system_rhs_contribution(self.q)
                 rhs_contributions.append(tba)
-                
+
             rhs += sum(rhs_contributions)
 
             q_new = np.linalg.solve(self.global_system_matrix, rhs)
