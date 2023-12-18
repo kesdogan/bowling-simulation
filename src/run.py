@@ -4,8 +4,9 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from constraints import CollisionConstraint, VolumeConstraint, Simplicial2DConstraint
+from constraints import CollisionConstraint, Simplicial2DConstraint, VolumeConstraint
 from solver import ProjectiveDynamicsSolver
+from src.caching import Cache
 from utils import Object
 
 # global veriables
@@ -22,6 +23,8 @@ pin_rows = 1
 ball_speed = 10.0
 running = False
 fancy_pins = False
+
+epoch = 0
 
 
 # set up scene for a variable number of pin rows
@@ -57,6 +60,9 @@ def set_up_scene():
     for i in range(pin_rows):
         for j in range(-i, i + 1):
             pin_vertices = v + np.array([i * 1.5, 0, 0]) + np.array([0, 0, j * 1.5])
+            pin_center = np.mean(pin_vertices, axis=0)
+            pin_vertices = np.concatenate((pin_vertices, pin_center.reshape(1, -1)))
+
             pin_faces = f + len(vertices)
 
             faces = np.concatenate((faces, pin_faces), axis=0)
@@ -66,35 +72,32 @@ def set_up_scene():
             )
             object_list.append(Object(pin_vertices, f))
 
-            pin_center = np.mean(pin_vertices, axis=0)
-            vertices = np.concatenate((vertices, pin_center.reshape(1, -1)))
-
             tetrahedrons += [np.append(face, len(vertices) - 1) for face in pin_faces]
             center_indices.append(len(vertices) - 1)
 
     # intial all objects as static, except for ball, which is given initial velocity
     # slowly approaching pins
     initial_velocities = np.zeros(vertices.shape)
-    # initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
+    initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
 
     masses = np.ones(len(vertices))
     masses *= 0.00001
-    masses[:indices_ball] *= 0.1
+    masses[:indices_ball] *= 10
     external_forces = np.zeros(vertices.shape)
 
     shape_constraints = [
-        # VolumeConstraint(
-        #     tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=5
-        # )
-        # for tetrahedron in tetrahedrons
+        VolumeConstraint(
+            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=5
+        )
+        for tetrahedron in tetrahedrons
     ]
     shape_constraints += [
-        # Simplicial2DConstraint(
-        #     triangle_indices=face,
-        #     initial_positions=vertices,
-        #     weight=5,
-        # )
-        # for face in faces
+        Simplicial2DConstraint(
+            triangle_indices=face,
+            initial_positions=vertices,
+            weight=5,
+        )
+        for face in faces
     ]
 
     solver = ProjectiveDynamicsSolver(
@@ -103,18 +106,21 @@ def set_up_scene():
         masses,
         external_forces,
         shape_constraints,
-        step_size=0.01,
+        step_size=0.005,
     )
 
 
 # register complete mesh w/ polyscope
 set_up_scene()
+
+cache = Cache(faces, vertices)
+
 ps.init()
 mesh = ps.register_surface_mesh("everything", vertices, faces)
 
 
 def callback():
-    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins
+    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins, epoch, cache
 
     psim.PushItemWidth(100)
     psim.TextUnformatted("Here we do the initial set up of the scene")
@@ -130,6 +136,7 @@ def callback():
         set_up_scene()
         ps.remove_surface_mesh("everything", error_if_absent=False)
         mesh = ps.register_surface_mesh("everything", vertices, faces)
+        cache = Cache(faces, vertices)
 
     psim.Separator()
     psim.TextUnformatted("Here we control the simulation")
@@ -137,8 +144,6 @@ def callback():
         running = not running
 
     psim.PopItemWidth()
-
-    print(len(object_list))
 
     if running:
         collisions = collision_detecter(object_list, vertices, faces, solver.q)
@@ -151,7 +156,7 @@ def callback():
             ):
                 if penetrating_vertex in center_indices:
                     continue
-                print(collision)
+
                 collision_constraints.append(
                     CollisionConstraint(
                         weight=10,
@@ -165,8 +170,15 @@ def callback():
 
         solver.perform_step(10)
         mesh.update_vertex_positions(solver.q)
+        cache.add(solver.q)
+
+        if epoch % 10 == 0:
+            cache.store()
+
+        epoch += 1
 
 
 ps.set_user_callback(callback)
 ps.show()
 ps.clear_user_callback()
+cache.store()
