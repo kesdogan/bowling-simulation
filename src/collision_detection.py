@@ -47,8 +47,6 @@ def collision_detecter(object_list, vertices, faces, q):
         collision_mask = S < 0
 
         if np.any(collision_mask):
-            print("COLLISION DETECTED")
-
             collision_indices = np.arange(len(object.v))[collision_mask]
             C = C[collision_mask]
             N = N[collision_mask]

@@ -110,12 +110,9 @@ class ProjectiveDynamicsSolver:
     def update_constraints(self, constraints: list[PDConstraint]):
         """Updates the constraints of the solver."""
         if self.constraints is constraints:
-            print(len(self.constraints))
             return
 
         self.constraints = constraints
         self.global_system_matrix = self.M / self.h**2 + sum(
             c.get_global_system_matrix_contribution() for c in self.constraints
         )
-
-        print(len(self.constraints))

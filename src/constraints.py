@@ -76,11 +76,9 @@ class VolumeConstraint(PDConstraint):
     X_g: np.ndarray = field(init=False)
     X_g_inv: np.ndarray = field(init=False)
 
-    eps = 0.000001
+    eps: float = 0.000001
 
     def __post_init__(self):
-        n = len(self.initial_positions)
-
         self.A = np.array(
             [
                 [1, 0, 0, -1],
@@ -89,6 +87,7 @@ class VolumeConstraint(PDConstraint):
             ]
         )
 
+        n = len(self.initial_positions)
         self.S = np.zeros((4, n))
         self.S[0, self.tetrahedron_indices[0]] = 1
         self.S[1, self.tetrahedron_indices[1]] = 1
@@ -110,6 +109,7 @@ class VolumeConstraint(PDConstraint):
         # check if we even have to correct
 
         det_sigma_p = np.linalg.det(sigma_p)
+
         if self.sigma_min <= det_sigma_p <= self.sigma_max:
             T = U @ sigma_p @ V_t
             auxiliary_variable = (T @ self.X_g).T
