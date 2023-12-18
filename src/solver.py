@@ -88,11 +88,11 @@ class Simplicial2DConstraint(PDConstraint):
         auxiliary_variable = (T @ self.X_g).T
         return auxiliary_variable
     
-    # def get_global_system_rhs_contribution(
-    #     self, current_positions: np.ndarray
-    # ) -> np.ndarray:
-    #     """Returns the contribution of the RHS constribution of the global system."""
-    #     return self.weight * self.S.T @ self.A.T @ current_positions
+    def get_global_system_rhs_contribution(
+        self, current_positions: np.ndarray
+    ) -> np.ndarray:
+        """Returns the contribution of the RHS constribution of the global system."""
+        return self.weight * self.S.T @ self.A.T @ current_positions
 
 
 @dataclass
@@ -214,7 +214,8 @@ class ProjectiveDynamicsSolver:
             rr = np.transpose(rr, axes=[0, 2, 1])
 
             for i, c in enumerate(self.constraints[:len(self.faces)]):
-                rhs_contributions.append(c.get_global_system_rhs_contribution(self.q))
+                
+                rhs_contributions.append(c.get_global_system_rhs_contribution(rr[i]))
 
             for c in self.constraints[len(self.faces):]:
                 tba = c.get_global_system_rhs_contribution(self.q)
