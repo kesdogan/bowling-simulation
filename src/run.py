@@ -4,9 +4,7 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from constraints import (CollisionConstraint, PDConstraint,
-                         Simplicial2DConstraint)
-from solver import ProjectiveDynamicsSolver
+from solver import ProjectiveDynamicsSolver, CollisionConstraint, PDConstraint, Simplicial2DConstraint
 from utils import Object
 
 # global veriables
@@ -70,14 +68,18 @@ def set_up_scene():
         for face in faces
     ]
 
+    
+
     solver = ProjectiveDynamicsSolver(
         vertices,
         initial_velocities,
         masses,
         external_forces,
         simplicial_constraints,
+        faces=faces,
         step_size=0.01,
     )
+    solver.inverse_2d_constraints()
 
 
 # register complete mesh w/ polyscope

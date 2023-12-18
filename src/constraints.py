@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from src.solver import PDConstraint
+from solver import PDConstraint
 
 
 @dataclass
@@ -42,7 +42,8 @@ class Simplicial2DConstraint(PDConstraint):
         self.X_g = (self.A @ self.S @ self.initial_positions).T
         self.X_g_inv = np.linalg.pinv(self.X_g)
 
-        self.intersting = 29 in self.triangle_indices
+    def get_x_g_inv(self):
+        return self.X_g_inv
 
     def _get_auxiliary_variable(self, current_positions: np.ndarray) -> np.ndarray:
         X_f = (self.A @ self.S @ current_positions).T
