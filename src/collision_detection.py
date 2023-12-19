@@ -58,16 +58,6 @@ def signed_distance(
     _, min_fidx = torch.min(face_dist, dim=1)
     del face_dist
 
-    # identify the sign of the distance to the mesh
-    # negative means inside, positive means outside
-    # first approach:
-    # winding_number, as detailed in this paper:
-    # https://igl.ethz.ch/projects/winding-number/robust-inside-outside-segmentation-using-generalized-winding-numbers-siggraph-2013-jacobson-et-al.pdf
-    # this approach is very slow, but it is the most accurate
-    # second approach:
-    # comput the normal of each face, use the matching face indices for each point to identify the normal of the closest face
-    # and comput the dot product between the normal and the vector from the point to the center of the face
-    # much faster approach, but slightly less accurate
 
     # compute the sign of the distance
     normals = per_face_normals(vertices, faces)
