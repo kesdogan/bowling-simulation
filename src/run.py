@@ -20,7 +20,8 @@ vertices = (
     initial_velocities
 ) = masses = external_forces = shape_constraints = solver = center_indices = None
 pin_rows = 1
-ball_speed = 10.0
+render = False
+ball_speed = 50.0
 running = False
 fancy_pins = False
 
@@ -58,8 +59,12 @@ def set_up_scene():
     v[:, 1] = v[:, 1] - v[:, 1].min() + ball_min
 
     for i in range(pin_rows):
-        for j in range(-i, i + 1):
-            pin_vertices = v + np.array([i * 1.5, 0, 0]) + np.array([0, 0, j * 1.5])
+        for j in range(i + 1):
+            pin_vertices = (
+                v
+                + np.array([i * 1.75, 0, 0])
+                + np.array([0, 0, -(i / 2) * 1.75 + j * 1.75])
+            )
             pin_center = np.mean(pin_vertices, axis=0)
             pin_vertices = np.concatenate((pin_vertices, pin_center.reshape(1, -1)))
 
@@ -75,19 +80,35 @@ def set_up_scene():
             tetrahedrons += [np.append(face, len(vertices) - 1) for face in pin_faces]
             center_indices.append(len(vertices) - 1)
 
+    # add floor
+    floor_vertices = np.array(
+        [
+            [-10, np.min(vertices[:, 1]) - 0.01, -10],
+            [-10, np.min(vertices[:, 1]) - 0.01, 10],
+            [10, np.min(vertices[:, 1]) - 0.01, -10],
+            [10, np.min(vertices[:, 1]) - 0.01, 10],
+        ]
+    )
+    floor_faces = np.array([[0, 1, 2], [3, 2, 1]])
+    faces = np.concatenate((faces, floor_faces + len(vertices)), axis=0)
+    vertices = np.concatenate((vertices, floor_vertices), axis=0)
+    object_list.append(Object(floor_vertices, floor_faces))
+
     # intial all objects as static, except for ball, which is given initial velocity
     # slowly approaching pins
     initial_velocities = np.zeros(vertices.shape)
     initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
 
     masses = np.ones(len(vertices))
-    masses *= 0.00001
-    masses[:indices_ball] *= 10
+    masses *= 0.000001
+    masses[:indices_ball] *= 30.0
+    masses[-len(floor_vertices) :] = 1
     external_forces = np.zeros(vertices.shape)
+    external_forces[: -len(floor_vertices)] = np.array([0, -0.0001, 0])
 
     shape_constraints = [
         VolumeConstraint(
-            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=5
+            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=10
         )
         for tetrahedron in tetrahedrons
     ]
@@ -95,7 +116,7 @@ def set_up_scene():
         Simplicial2DConstraint(
             triangle_indices=face,
             initial_positions=vertices,
-            weight=5,
+            weight=10,
         )
         for face in faces
     ]
@@ -120,7 +141,7 @@ mesh = ps.register_surface_mesh("everything", vertices, faces)
 
 
 def callback():
-    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins, epoch, cache
+    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins, epoch, cache, render
 
     psim.PushItemWidth(100)
     psim.TextUnformatted("Here we do the initial set up of the scene")
@@ -130,18 +151,19 @@ def callback():
     )
     changed3, fancy_pins = psim.Checkbox("fancy_pins", fancy_pins)
 
-    if changed1 or changed2 or changed3:
+    psim.Separator()
+    psim.TextUnformatted("Here we control the simulation")
+    if psim.Button("Start / Pause"):
+        running = not running
+    changed4, render = psim.Checkbox("render", render)
+
+    if changed1 or changed2 or changed3 or changed4:
         print("scene settings changed")
         print(pin_rows)
         set_up_scene()
         ps.remove_surface_mesh("everything", error_if_absent=False)
         mesh = ps.register_surface_mesh("everything", vertices, faces)
         cache = Cache(faces, vertices)
-
-    psim.Separator()
-    psim.TextUnformatted("Here we control the simulation")
-    if psim.Button("Start / Pause"):
-        running = not running
 
     psim.PopItemWidth()
 
@@ -159,7 +181,7 @@ def callback():
 
                 collision_constraints.append(
                     CollisionConstraint(
-                        weight=10,
+                        weight=0.5,
                         num_vertices=len(vertices),
                         penetrating_vertex_index=penetrating_vertex,
                         projected_vertex_positions=projection_of_point_on_face,
@@ -169,8 +191,10 @@ def callback():
         solver.update_constraints(shape_constraints + collision_constraints)
 
         solver.perform_step(10)
-        mesh.update_vertex_positions(solver.q)
+        if render:
+            mesh.update_vertex_positions(solver.q)
         cache.add(solver.q)
+        print("epoch", epoch)
 
         if epoch % 10 == 0:
             cache.store()

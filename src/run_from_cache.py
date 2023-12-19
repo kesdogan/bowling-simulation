@@ -1,3 +1,4 @@
+from time import sleep
 import polyscope as ps
 import polyscope.imgui as psim
 
@@ -9,17 +10,24 @@ running = False
 cache = Cache.from_file()
 
 ps.init()
-mesh = ps.register_surface_mesh("everything", cache.vertices, cache.faces)
+mesh = ps.register_surface_mesh("everything", cache.initial_vertices, cache.faces)
 
 
 def callback():
-    global running, epoch
+    global running, epoch, mesh
 
     psim.PushItemWidth(100)
     psim.Separator()
     psim.TextUnformatted("Here we control the simulation")
     if psim.Button("Start / Pause"):
         running = not running
+
+        if running:
+            sleep(1)
+            mesh = ps.register_surface_mesh(
+                "everything", cache.initial_vertices, cache.faces
+            )
+            epoch = 0
 
     psim.PopItemWidth()
 
