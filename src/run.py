@@ -7,10 +7,14 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from constraints import CollisionConstraint, Simplicial2DConstraint, VolumeConstraint
+from constraints import (CollisionConstraint, Simplicial2DConstraint,
+                         VolumeConstraint)
 from solver import ProjectiveDynamicsSolver
 from src.caching import Cache
+from src.solver_fast_shape_constraints import FasterProjectiveDynamicsSolver
 from utils import Object
+
+SOLVER = FasterProjectiveDynamicsSolver  # or ProjectiveDynamicsSolver
 
 # global veriables
 object_list = []
@@ -123,12 +127,12 @@ def set_up_scene():
         Simplicial2DConstraint(
             triangle_indices=face,
             initial_positions=vertices,
-            weight=20,
+            weight=10,
         )
         for face in faces
     ]
 
-    solver = ProjectiveDynamicsSolver(
+    solver = SOLVER(
         vertices,
         initial_velocities,
         masses,
@@ -203,18 +207,17 @@ def callback():
 
         # render the new frame
 
-        print("frame", frame)
-
         if render:
             mesh.update_vertex_positions(solver.q)
 
         cache.add_frame(solver.q)
 
+        frame += 1
+
         if frame % 10 == 0:
             cache.store()
             mesh.update_vertex_positions(solver.q)
-
-        frame += 1
+            print("frame", frame)
 
 
 ps.set_user_callback(callback)
