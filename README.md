@@ -18,7 +18,7 @@ If you installed new requirements, run the following command to update the `requ
 pip freeze > requirements.txt
 ```
 
-## How to run
+## 🎳 Run the Simulation
 
 Use the command `make run` to run the simulation. The simulation is automatically cached in the `cache` folder. Use the command `make run-cached` to rerun the last simulation or `make run-cached f=<file_name>` to run a specific cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
 
