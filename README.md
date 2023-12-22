@@ -1,5 +1,7 @@
 # bowling-simulation
 
+(Timur Kesdogan & Tobia Ochsner)
+
 ## 👋 Quick Start
 
 After cloning into this repository, set up a venv environment and install the python requirements using the following commands (on Windows, the commands to initialize the venv environment might look slightly different):
@@ -19,6 +21,17 @@ pip freeze > requirements.txt
 ## How to run
 
 Use the command `make run` to run the simulation. Use the command `make run-cached` to rerun a previously cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
+
+## Features
+
+- Projective Dynamics Solver
+- 2D Simplicial Constraints
+- Volume Constraints
+- Collision Detection & Collision Constraints
+- Faster batched 2D Simplicial Constraints
+- (Incomplete) GPU version (`make run-gpu`)
+  - Uses PyTorch for everything
+  - Way faster collision detection
 
 ## 📚 Sources
 

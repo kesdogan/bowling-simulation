@@ -15,5 +15,8 @@ test:
 run:
 	python3 src/run.py
 
+run-gpu:
+	python3 src/gpu/run.py
+
 run-cached:
 	python3 src/run_from_cache.py

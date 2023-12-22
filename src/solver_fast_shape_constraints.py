@@ -53,6 +53,9 @@ class FasterProjectiveDynamicsSolver(ProjectiveDynamicsSolver):
         for _ in range(num_iterations_per_step):
             rhs = self.M @ s / self.h**2
 
+            # calculate rhs contributions from shape constraints by
+            # batching the calculation of the auxiliary variable p
+
             rhs_contributions = []
             intermediate = np.matmul(
                 self.shape_A,
