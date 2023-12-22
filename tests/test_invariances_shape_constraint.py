@@ -1,6 +1,5 @@
-from src.utils import Triangle, Vertex
 from src.constraints import Simplicial2DConstraint
-from src.solver import ProjectiveDynamicsSolver, PDConstraint
+from src.solver_fast_shape_constraints import ProjectiveDynamicsSolver, PDConstraint
 from scipy.spatial.transform import Rotation
 import numpy as np
 

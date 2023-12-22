@@ -1,10 +1,10 @@
 import numpy as np
 
-from constraints import Simplicial2DConstraint
+from src.constraints import Simplicial2DConstraint
 from src.solver import PDConstraint, ProjectiveDynamicsSolver
 
 
-class FasterProjectiveDynamicsSolver(ProjectiveDynamicsSolver):
+class ProjectiveDynamicsSolver(ProjectiveDynamicsSolver):
     """This class adapts the ProjectiveDynamicsSolver to process
     Simplicial2DConstraints faster by batching the caclulation of the
     auxiliary variable p (mainly the SVD decomposition).

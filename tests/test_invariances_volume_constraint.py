@@ -1,4 +1,3 @@
-from src.utils import Triangle, Vertex
 from src.constraints import VolumeConstraint
 from src.solver import ProjectiveDynamicsSolver, PDConstraint
 from scipy.spatial.transform import Rotation

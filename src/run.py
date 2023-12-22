@@ -7,11 +7,12 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from constraints import (CollisionConstraint, Simplicial2DConstraint,
-                         VolumeConstraint)
+from constraints import CollisionConstraint, Simplicial2DConstraint, VolumeConstraint
 from solver import ProjectiveDynamicsSolver
 from src.caching import Cache
-from src.solver_fast_shape_constraints import FasterProjectiveDynamicsSolver
+from src.solver_fast_shape_constraints import (
+    ProjectiveDynamicsSolver as FasterProjectiveDynamicsSolver,
+)
 from utils import Object
 
 SOLVER = FasterProjectiveDynamicsSolver  # or ProjectiveDynamicsSolver

@@ -20,7 +20,11 @@ pip freeze > requirements.txt
 
 ## How to run
 
-Use the command `make run` to run the simulation. Use the command `make run-cached` to rerun the last simulation or `make run-cached f=<file_name>` to run a specific cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
+Use the command `make run` to run the simulation. The simulation is automatically cached in the `cache` folder. Use the command `make run-cached` to rerun the last simulation or `make run-cached f=<file_name>` to run a specific cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
+
+## Tests
+
+We have sanity checks of the projective dynamics solver to test the effect of extenral forces or to test invarinces like the translation and rotation invariance of the shape and volume contraints. To run the tests, use the command `make test`.
 
 ## Features
 
