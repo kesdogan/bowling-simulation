@@ -7,7 +7,11 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 from collision_detection import collision_detecter
-from constraints import CollisionConstraint, Simplicial2DConstraint, VolumeConstraint
+from src.constraints import (
+    CollisionConstraint,
+    Simplicial2DConstraint,
+    VolumeConstraint,
+)
 from solver import ProjectiveDynamicsSolver
 from src.caching import Cache
 from src.solver_fast_shape_constraints import (
@@ -29,9 +33,9 @@ vertices = (
 ) = masses = external_forces = shape_constraints = solver = center_indices = None
 pin_rows = 1
 render = False
-ball_speed = 60.0
+ball_speed = 90.0
 running = False
-fancy_pins = False
+fancy_pins = True
 
 frame = 0
 
@@ -43,7 +47,7 @@ def set_up_scene():
     # set up the ball
     v, _, _, f, _, _ = igl.read_obj("./assets/simple_ball.obj")
     ball_min = v[:, 1].min()
-    v = v + np.array([-6, 0, 0])
+    v = v + np.array([-3, 0, 0])
     object_list = [Object(v, f)]
 
     vertices = np.array(v)
@@ -91,10 +95,10 @@ def set_up_scene():
 
     floor_vertices = np.array(
         [
-            [-10, np.min(vertices[:, 1]) - 0.01, -10],
-            [-10, np.min(vertices[:, 1]) - 0.01, 10],
-            [10, np.min(vertices[:, 1]) - 0.01, -10],
-            [10, np.min(vertices[:, 1]) - 0.01, 10],
+            [-10, np.min(vertices[:, 1]) - 0.001, -10],
+            [-10, np.min(vertices[:, 1]) - 0.001, 10],
+            [10, np.min(vertices[:, 1]) - 0.001, -10],
+            [10, np.min(vertices[:, 1]) - 0.001, 10],
         ]
     )
     floor_faces = np.array([[0, 1, 2], [3, 2, 1]])
@@ -110,17 +114,17 @@ def set_up_scene():
     initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
 
     masses = np.ones(len(vertices))
-    masses *= 0.0000001
-    masses[:indices_ball] *= 120.0
+    masses *= 0.000001
+    masses[:indices_ball] *= 10
     masses[-len(floor_vertices) :] = 1
     external_forces = np.zeros(vertices.shape)
-    external_forces[: -len(floor_vertices)] = np.array([0, -0.0001, 0])
+    external_forces[: -len(floor_vertices)] = np.array([0, -0.001, 0])
 
     # set up constraints and solver
 
     shape_constraints = [
         VolumeConstraint(
-            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=50
+            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=0.5
         )
         for tetrahedron in tetrahedrons
     ]
@@ -128,7 +132,7 @@ def set_up_scene():
         Simplicial2DConstraint(
             triangle_indices=face,
             initial_positions=vertices,
-            weight=10,
+            weight=20,
         )
         for face in faces
     ]
