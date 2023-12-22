@@ -12,7 +12,7 @@ class Cache:
         self.positions = []
         self.faces = faces
         self.initial_vertices = vertices
-        self.file_name = f"cache_{datetime.now()}.pkl"
+        self.file_name = f"cache/cache_{datetime.now()}.pkl"
 
     def add_frame(self, positions):
         self.positions.append(positions)
@@ -28,7 +28,7 @@ class Cache:
     def from_file(cls, file_name=None) -> "Cache":
         """Loads the last cached file. If file_name is given, loads that file instead."""
         last_cached_file = file_name or max(
-            Path().glob("cache*.pkl"), key=lambda f: f.stat().st_mtime
+            Path().glob("cache/cache*.pkl"), key=lambda f: f.stat().st_mtime
         )
         with open(last_cached_file, "rb") as f:
             return pickle.load(f)

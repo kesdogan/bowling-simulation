@@ -20,7 +20,7 @@ pip freeze > requirements.txt
 
 ## How to run
 
-Use the command `make run` to run the simulation. Use the command `make run-cached` to rerun a previously cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
+Use the command `make run` to run the simulation. Use the command `make run-cached` to rerun the last simulation or `make run-cached f=<file_name>` to run a specific cached simulation. By default, the latest cached simulation is used. To use a specific cached simulation, change the `FILE_NAME` variable in the `run_from_cache.py` file.
 
 ## Features
 

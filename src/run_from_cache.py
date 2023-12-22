@@ -7,9 +7,11 @@ import polyscope.imgui as psim
 
 from src.caching import Cache
 
+from sys import argv
+
 # the file name of the cache file to load
 # if None, the latest cache file is loaded
-FILE_NAME = "cache_nice_2.pkl"
+FILE_NAME = argv[1] if len(argv) > 1 else None
 
 epoch = 0
 running = False
