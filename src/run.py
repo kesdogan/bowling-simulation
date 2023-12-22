@@ -1,3 +1,6 @@
+"""This file contains the main function of the project. It sets up the scene and
+starts the simulation loop."""
+
 import igl
 import numpy as np
 import polyscope as ps
@@ -21,21 +24,21 @@ vertices = (
 ) = masses = external_forces = shape_constraints = solver = center_indices = None
 pin_rows = 1
 render = False
-ball_speed = 50.0
+ball_speed = 60.0
 running = False
 fancy_pins = False
 
-epoch = 0
+frame = 0
 
 
-# set up scene for a variable number of pin rows
 def set_up_scene():
+    """Sets up the scene given by the global variables."""
     global vertices, faces, object_list, initial_velocities, masses, external_forces, shape_constraints, solver, ball_speed, pin_rows, fancy_pins, center_indices
 
-    # load bowling ball from obj file place in field
+    # set up the ball
     v, _, _, f, _, _ = igl.read_obj("./assets/simple_ball.obj")
     ball_min = v[:, 1].min()
-    v = v + np.array([-3, 0, 0])
+    v = v + np.array([-6, 0, 0])
     object_list = [Object(v, f)]
 
     vertices = np.array(v)
@@ -47,11 +50,10 @@ def set_up_scene():
     indices_ball = len(vertices)
     center_indices = [indices_ball - 1]
 
-    # create global faces and vertices np.arrays
-
     tetrahedrons = [np.append(face, indices_ball - 1) for face in faces]
 
-    # add pins to the same mesh in this array
+    # set up pins
+
     if fancy_pins:
         v, _, _, f, _, _ = igl.read_obj("./assets/fancy_pin.obj")
     else:
@@ -62,8 +64,8 @@ def set_up_scene():
         for j in range(i + 1):
             pin_vertices = (
                 v
-                + np.array([i * 1.75, 0, 0])
-                + np.array([0, 0, -(i / 2) * 1.75 + j * 1.75])
+                + np.array([i * 1.6, 0, 0])
+                + np.array([0, 0, -(i / 2) * 1.6 + j * 1.6])
             )
             pin_center = np.mean(pin_vertices, axis=0)
             pin_vertices = np.concatenate((pin_vertices, pin_center.reshape(1, -1)))
@@ -80,7 +82,8 @@ def set_up_scene():
             tetrahedrons += [np.append(face, len(vertices) - 1) for face in pin_faces]
             center_indices.append(len(vertices) - 1)
 
-    # add floor
+    # set up floor
+
     floor_vertices = np.array(
         [
             [-10, np.min(vertices[:, 1]) - 0.01, -10],
@@ -94,21 +97,25 @@ def set_up_scene():
     vertices = np.concatenate((vertices, floor_vertices), axis=0)
     object_list.append(Object(floor_vertices, floor_faces))
 
+    # set up velocities, masses, external forces
+
     # intial all objects as static, except for ball, which is given initial velocity
     # slowly approaching pins
     initial_velocities = np.zeros(vertices.shape)
     initial_velocities[:indices_ball] = np.array([ball_speed, 0, 0])
 
     masses = np.ones(len(vertices))
-    masses *= 0.000001
-    masses[:indices_ball] *= 30.0
+    masses *= 0.0000001
+    masses[:indices_ball] *= 120.0
     masses[-len(floor_vertices) :] = 1
     external_forces = np.zeros(vertices.shape)
     external_forces[: -len(floor_vertices)] = np.array([0, -0.0001, 0])
 
+    # set up constraints and solver
+
     shape_constraints = [
         VolumeConstraint(
-            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=10
+            tetrahedron_indices=tetrahedron, initial_positions=vertices, weight=50
         )
         for tetrahedron in tetrahedrons
     ]
@@ -116,7 +123,7 @@ def set_up_scene():
         Simplicial2DConstraint(
             triangle_indices=face,
             initial_positions=vertices,
-            weight=10,
+            weight=20,
         )
         for face in faces
     ]
@@ -127,13 +134,11 @@ def set_up_scene():
         masses,
         external_forces,
         shape_constraints,
-        step_size=0.005,
+        step_size=0.001,
     )
 
 
-# register complete mesh w/ polyscope
 set_up_scene()
-
 cache = Cache(faces, vertices)
 
 ps.init()
@@ -141,7 +146,9 @@ mesh = ps.register_surface_mesh("everything", vertices, faces)
 
 
 def callback():
-    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins, epoch, cache, render
+    global running, pin_rows, mesh, vertices, object_list, solver, ball_speed, fancy_pins, frame, cache, render
+
+    # set up GUI
 
     psim.PushItemWidth(100)
     psim.TextUnformatted("Here we do the initial set up of the scene")
@@ -168,6 +175,8 @@ def callback():
     psim.PopItemWidth()
 
     if running:
+        # first detect collisions, then update constraints, then perform step
+
         collisions = collision_detecter(object_list, vertices, faces, solver.q)
 
         collision_constraints = []
@@ -181,7 +190,7 @@ def callback():
 
                 collision_constraints.append(
                     CollisionConstraint(
-                        weight=0.5,
+                        weight=1,
                         num_vertices=len(vertices),
                         penetrating_vertex_index=penetrating_vertex,
                         projected_vertex_positions=projection_of_point_on_face,
@@ -191,15 +200,21 @@ def callback():
         solver.update_constraints(shape_constraints + collision_constraints)
 
         solver.perform_step(10)
+
+        # render the new frame
+
+        print("frame", frame)
+
         if render:
             mesh.update_vertex_positions(solver.q)
-        cache.add(solver.q)
-        print("epoch", epoch)
 
-        if epoch % 10 == 0:
+        cache.add_frame(solver.q)
+
+        if frame % 10 == 0:
             cache.store()
+            mesh.update_vertex_positions(solver.q)
 
-        epoch += 1
+        frame += 1
 
 
 ps.set_user_callback(callback)

@@ -1,13 +1,20 @@
+"""This file allows to run a simulation from a cached file."""
+
 from time import sleep
+
 import polyscope as ps
 import polyscope.imgui as psim
 
 from src.caching import Cache
 
+# the file name of the cache file to load
+# if None, the latest cache file is loaded
+FILE_NAME = "cache_nice_2.pkl"
+
 epoch = 0
 running = False
 
-cache = Cache.from_file()
+cache = Cache.from_file(FILE_NAME)
 
 ps.init()
 mesh = ps.register_surface_mesh("everything", cache.initial_vertices, cache.faces)
@@ -32,7 +39,7 @@ def callback():
     psim.PopItemWidth()
 
     if running:
-        mesh.update_vertex_positions(cache.get(epoch))
+        mesh.update_vertex_positions(cache.get_frame(epoch))
         epoch += 1
 
 
