@@ -1,13 +1,12 @@
 """This file allows to run a simulation from a cached file."""
 
+from sys import argv
 from time import sleep
 
 import polyscope as ps
 import polyscope.imgui as psim
 
 from src.caching import Cache
-
-from sys import argv
 
 # the file name of the cache file to load
 # if None, the latest cache file is loaded
